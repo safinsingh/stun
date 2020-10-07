@@ -33,11 +33,59 @@ impl<'a> Lexer<'a> {
     pub fn current_char(&self) -> Option<char> {
         self.get_char(self.cursor)
     }
+
+    fn number(&mut self) -> Option<Token> {
+        let mut s = String::new();
+        let start = self.cursor;
+
+        while let Some(n) = self.current_char() {
+            match n {
+                '0'..='9' => {
+                    s.push(n);
+                    self.translate(1);
+                }
+                _ => break,
+            }
+        }
+
+        match s.parse() {
+            Ok(num) => Some(Token {
+                kind: TokenKind::Number(num),
+                span: Span::new(start, self.cursor),
+            }),
+            _ => Some(Token {
+                kind: TokenKind::Undefined(s.clone()),
+                span: Span::new(start, self.cursor),
+            }),
+        }
+    }
+
+    fn identifier(&mut self) -> Option<Token> {
+        let mut s = String::new();
+        let start = self.cursor;
+
+        while let Some(n) = self.current_char() {
+            match n {
+                'A'..='Z' | 'a'..='z' | '0'..='9' | '_' => {
+                    s.push(n);
+                    self.translate(1);
+                }
+                _ => break,
+            }
+        }
+
+        let kind = match s.as_str() {
+            "true" => TokenKind::True,
+            "false" => TokenKind::False,
+            _ => TokenKind::Ident(s),
+        };
+
+        Some(Token::new(kind, Span::new(start, self.cursor)))
+    }
 }
 
 impl<'a> Iterator for Lexer<'a> {
     type Item = Token;
-
     fn next(&mut self) -> Option<Token> {
         if let Some("--[[") = self.peek(4) {
             None // fix this later
@@ -66,11 +114,13 @@ impl<'a> Iterator for Lexer<'a> {
                     self.translate(1);
                     self.next()
                 }
+                'A'..='Z' | 'a'..='z' | '_' => self.identifier(),
+                '0'..='9' => self.number(),
                 _ => {
                     self.translate(1);
 
                     Some(Token::new(
-                        TokenKind::Undefined,
+                        TokenKind::Undefined(c.to_string()),
                         Span::new(start, self.cursor),
                     ))
                 }
@@ -97,9 +147,12 @@ impl Token {
 pub enum TokenKind {
     Assign,
     Equate,
-    Undefined,
+    Undefined(String),
+    Ident(String),
+    True,
+    False,
     // Comment(Comment),
-    // Integer(i64),
+    Number(f64),
 }
 
 #[derive(Debug, PartialEq)]
