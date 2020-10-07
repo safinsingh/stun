@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         loop {
             println!("{:?}", lex.next());
 
-            if !lex.current_char().is_some() {
+            if lex.current_char().is_none() {
                 break;
             }
         }

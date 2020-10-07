@@ -1,3 +1,5 @@
+use std::iter::Iterator;
+
 pub struct Lexer<'a> {
     pub input: &'a str,
     pub cursor: usize,
@@ -5,10 +7,7 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
-        Lexer {
-            input: input,
-            cursor: 0,
-        }
+        Lexer { input, cursor: 0 }
     }
 
     fn peek(&self, chars: usize) -> Option<&'a str> {
@@ -34,8 +33,12 @@ impl<'a> Lexer<'a> {
     pub fn current_char(&self) -> Option<char> {
         self.get_char(self.cursor)
     }
+}
 
-    pub fn next(&mut self) -> Option<Token> {
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Token> {
         if let Some("--[[") = self.peek(4) {
             None // fix this later
         } else if let Some(c) = self.current_char() {
@@ -86,10 +89,7 @@ pub struct Token {
 
 impl Token {
     fn new(kind: TokenKind, span: Span) -> Self {
-        Token {
-            kind: kind,
-            span: span,
-        }
+        Token { kind, span }
     }
 }
 
@@ -110,10 +110,7 @@ pub struct Span {
 
 impl Span {
     fn new(start: usize, end: usize) -> Self {
-        Span {
-            start: start,
-            end: end,
-        }
+        Span { start, end }
     }
 }
 
@@ -142,12 +139,12 @@ mod test {
 
         assert_eq!(
             lex.next(),
-            Some(Token::new(TokenKind::Assign, Span::new(0, 1),))
+            Some(Token::new(TokenKind::Assign, Span::new(0, 1)))
         );
 
         assert_eq!(
             lex.next(),
-            Some(Token::new(TokenKind::Equate, Span::new(2, 4),))
+            Some(Token::new(TokenKind::Equate, Span::new(2, 4)))
         );
     }
 }
