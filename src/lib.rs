@@ -88,8 +88,13 @@ impl<'a> Iterator for Lexer<'a> {
 	type Item = Token;
 
 	fn next(&mut self) -> Option<Token> {
-		if let Some("--[[") = self.peek(4) {
-			None // fix this later
+		if let Some("--") = self.peek(2) {
+			self.translate(self.input.len() - 1);
+
+			Some(Token::new(
+				TokType::SingleLineComment(self.input[2..].into()),
+				Span::new(0, self.cursor),
+			))
 		} else if let Some(c) = self.current_char() {
 			let start = self.cursor;
 			let next_char = self.peek_char();
@@ -152,7 +157,7 @@ pub enum TokType {
 	Ident(String),
 	True,
 	False,
-	// Comment(Comment),
+	SingleLineComment(String),
 	Number(f64),
 }
 
@@ -167,12 +172,6 @@ impl Span {
 		Span { start, end }
 	}
 }
-
-// #[derive(Debug, PartialEq)]
-// pub enum Comment {
-//     SingleLine(String),
-//     MultiLine(String),
-// }
 
 #[cfg(test)]
 mod test {
@@ -241,6 +240,22 @@ mod test {
 		assert_eq!(
 			lex.next(),
 			Some(Token::new(TokType::True, Span::new(6, 10)))
+		);
+	}
+
+	#[test]
+	fn single_line_comment() {
+		let input = "--whats up, cool comment, huh?";
+		let mut lex = Lexer::new(input);
+
+		assert_eq!(
+			lex.next(),
+			Some(Token::new(
+				TokType::SingleLineComment(
+					"whats up, cool comment, huh?".into()
+				),
+				Span::new(0, 29)
+			))
 		);
 	}
 }

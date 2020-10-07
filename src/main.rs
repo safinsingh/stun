@@ -1,14 +1,16 @@
-use std::{env, fs};
+use std::{env, error::Error, fs};
 
 mod lib;
+use lib::Lexer;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
 	let args: Vec<String> = env::args().collect();
 	let file = &args[1];
 
 	let content = fs::read_to_string(&file)?;
+
 	for line in content.lines() {
-		let mut lex = lib::Lexer::new(line.trim());
+		let mut lex = Lexer::new(line.trim());
 
 		loop {
 			println!("{:?}", lex.next());
