@@ -70,15 +70,13 @@ mod test {
 
 	#[test]
 	fn single_line_comment() {
-		let input = "--whats up, cool comment, huh?";
+		let input = "-- hello world!";
 		let mut lex = Lexer::new(input);
 
 		assert_eq!(
 			lex.next(),
 			Some(Token::new(
-				TokType::SingleLineComment(
-					"whats up, cool comment, huh?".into()
-				),
+				TokType::SingleLineComment("hello world!".into()),
 				Span::new(0, 29)
 			))
 		);

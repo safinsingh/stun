@@ -92,7 +92,7 @@ impl<'a> Iterator for Lexer<'a> {
 			self.translate(self.input.len() - 1);
 
 			Some(Token::new(
-				TokType::SingleLineComment(self.input[2..].into()),
+				TokType::SingleLineComment(self.input[2..].trim().into()),
 				Span::new(0, self.cursor),
 			))
 		} else if let Some(c) = self.current_char() {
@@ -153,10 +153,10 @@ impl Token {
 pub enum TokType {
 	Assign,
 	Equate,
-	Undefined(String),
-	Ident(String),
 	True,
 	False,
+	Undefined(String),
+	Ident(String),
 	SingleLineComment(String),
 	Number(f64),
 }
