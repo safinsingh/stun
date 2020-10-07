@@ -34,7 +34,7 @@ impl<'a> Lexer<'a> {
         self.get_char(self.cursor)
     }
 
-    fn number(&mut self) -> Option<Token> {
+    fn get_number(&mut self) -> Option<Token> {
         let mut s = String::new();
         let start = self.cursor;
 
@@ -50,11 +50,11 @@ impl<'a> Lexer<'a> {
 
         match s.parse() {
             Ok(num) => Some(Token {
-                kind: TokenKind::Number(num),
+                kind: TokType::Number(num),
                 span: Span::new(start, self.cursor),
             }),
             _ => Some(Token {
-                kind: TokenKind::Undefined(s.clone()),
+                kind: TokType::Undefined(s.clone()),
                 span: Span::new(start, self.cursor),
             }),
         }
@@ -75,9 +75,9 @@ impl<'a> Lexer<'a> {
         }
 
         let kind = match s.as_str() {
-            "true" => TokenKind::True,
-            "false" => TokenKind::False,
-            _ => TokenKind::Ident(s),
+            "true" => TokType::True,
+            "false" => TokType::False,
+            _ => TokType::Ident(s),
         };
 
         Some(Token::new(kind, Span::new(start, self.cursor)))
@@ -98,7 +98,7 @@ impl<'a> Iterator for Lexer<'a> {
                     self.translate(2);
 
                     Some(Token::new(
-                        TokenKind::Equate,
+                        TokType::Equate,
                         Span::new(start, self.cursor),
                     ))
                 }
@@ -106,7 +106,7 @@ impl<'a> Iterator for Lexer<'a> {
                     self.translate(1);
 
                     Some(Token::new(
-                        TokenKind::Assign,
+                        TokType::Assign,
                         Span::new(start, self.cursor),
                     ))
                 }
@@ -115,12 +115,12 @@ impl<'a> Iterator for Lexer<'a> {
                     self.next()
                 }
                 'A'..='Z' | 'a'..='z' | '_' => self.identifier(),
-                '0'..='9' => self.number(),
+                '0'..='9' => self.get_number(),
                 _ => {
                     self.translate(1);
 
                     Some(Token::new(
-                        TokenKind::Undefined(c.to_string()),
+                        TokType::Undefined(c.into()),
                         Span::new(start, self.cursor),
                     ))
                 }
@@ -133,18 +133,18 @@ impl<'a> Iterator for Lexer<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct Token {
-    pub kind: TokenKind,
+    pub kind: TokType,
     pub span: Span,
 }
 
 impl Token {
-    fn new(kind: TokenKind, span: Span) -> Self {
+    fn new(kind: TokType, span: Span) -> Self {
         Token { kind, span }
     }
 }
 
 #[derive(Debug, PartialEq)]
-pub enum TokenKind {
+pub enum TokType {
     Assign,
     Equate,
     Undefined(String),
@@ -192,12 +192,54 @@ mod test {
 
         assert_eq!(
             lex.next(),
-            Some(Token::new(TokenKind::Assign, Span::new(0, 1)))
+            Some(Token::new(TokType::Assign, Span::new(0, 1)))
         );
 
         assert_eq!(
             lex.next(),
-            Some(Token::new(TokenKind::Equate, Span::new(2, 4)))
+            Some(Token::new(TokType::Equate, Span::new(2, 4)))
+        );
+    }
+
+    #[test]
+    fn var_assign_num() {
+        let input = "      x=  23  ";
+        let mut lex = Lexer::new(input);
+
+        assert_eq!(
+            lex.next(),
+            Some(Token::new(TokType::Ident("x".into()), Span::new(6, 7)))
+        );
+
+        assert_eq!(
+            lex.next(),
+            Some(Token::new(TokType::Assign, Span::new(7, 8)))
+        );
+
+        assert_eq!(
+            lex.next(),
+            Some(Token::new(TokType::Number(23.0), Span::new(10, 12)))
+        );
+    }
+
+    #[test]
+    fn var_assign_bool() {
+        let input = "xgfd =true";
+        let mut lex = Lexer::new(input);
+
+        assert_eq!(
+            lex.next(),
+            Some(Token::new(TokType::Ident("xgfd".into()), Span::new(0, 4)))
+        );
+
+        assert_eq!(
+            lex.next(),
+            Some(Token::new(TokType::Assign, Span::new(5, 6)))
+        );
+
+        assert_eq!(
+            lex.next(),
+            Some(Token::new(TokType::True, Span::new(6, 10)))
         );
     }
 }
