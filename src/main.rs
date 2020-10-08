@@ -1,6 +1,7 @@
 use std::{env, error::Error, fs};
 
 mod lib;
+mod tests;
 use lib::Lexer;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -8,17 +9,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let file = &args[1];
 
 	let content = fs::read_to_string(&file)?;
+	let lex = Lexer::new(&content);
 
-	for line in content.lines() {
-		let mut lex = Lexer::new(line.trim());
-
-		loop {
-			println!("{:?}", lex.next());
-
-			if lex.current_char().is_none() {
-				break;
-			}
-		}
+	for lexed in lex {
+		println!("{:?}", lexed)
 	}
 
 	Ok(())
