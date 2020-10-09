@@ -1,0 +1,26 @@
+name: lint
+
+on:
+   push:
+      branches: [main]
+   pull_request:
+      branches: [main]
+
+env:
+   CARGO_TERM_COLOR: always
+
+jobs:
+   lint:
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Set up
+           uses: actions-rs/toolchain@v1
+           with:
+              toolchain: nightly
+              override: true
+              components: clippy
+
+         - uses: actions/checkout@v2
+         - name: Format
+           run: cargo clippy -- -D warnings
