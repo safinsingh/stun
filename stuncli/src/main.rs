@@ -1,16 +1,25 @@
 use std::{env, error::Error, fs};
 
 use stunlex::Lexer;
+mod repl;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	let args: Vec<String> = env::args().collect();
-	let file = &args[1];
+	let mut args: Vec<String> = env::args().collect();
 
-	let content = fs::read_to_string(&file)?;
-	let lex = Lexer::new(&content);
+	match args.len() {
+		1 => repl::new(),
+		_ => {
+			args.remove(0);
 
-	for lexed in lex {
-		println!("{:?}", lexed)
+			for file in args {
+				let content = fs::read_to_string(&file)?;
+				let lex = Lexer::new(&content);
+
+				for lexed in lex {
+					println!("{:?}", lexed)
+				}
+			}
+		}
 	}
 
 	Ok(())
