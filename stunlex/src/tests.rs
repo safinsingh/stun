@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-	use stun::*;
+	use crate::*;
 
 	#[test]
 	fn whitespace() {
@@ -106,6 +106,27 @@ mod test {
 				TokType::SingleLineString("str".into()),
 				Span::new(2, 8, 1)
 			))
+		);
+	}
+
+	#[test]
+	fn var_assign_float() {
+		let input = "      x=  2.3  ";
+		let mut lex = Lexer::new(input);
+
+		assert_eq!(
+			lex.next(),
+			Some(Token::new(TokType::Ident("x".into()), Span::new(6, 7, 1)))
+		);
+
+		assert_eq!(
+			lex.next(),
+			Some(Token::new(TokType::Assign, Span::new(7, 8, 1)))
+		);
+
+		assert_eq!(
+			lex.next(),
+			Some(Token::new(TokType::Number(2.3), Span::new(10, 13, 1)))
 		);
 	}
 }

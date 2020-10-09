@@ -1,8 +1,6 @@
 use std::{env, error::Error, fs};
 
-mod lib;
-mod tests;
-use lib::Lexer;
+use stunlex::Lexer;
 
 fn main() -> Result<(), Box<dyn Error>> {
 	let args: Vec<String> = env::args().collect();

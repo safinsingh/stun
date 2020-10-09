@@ -1,4 +1,5 @@
 use std::iter::Iterator;
+mod tests;
 
 pub struct Lexer<'a> {
 	pub input: &'a str,
@@ -52,6 +53,10 @@ impl<'a> Lexer<'a> {
 					s.push(n);
 					self.translate(1);
 				}
+				'.' if matches!(self.peek_char(), Some('0'..='9')) => {
+					s.push(n);
+					self.translate(1);
+				}
 				_ => break,
 			}
 		}
@@ -62,7 +67,7 @@ impl<'a> Lexer<'a> {
 				span: Span::new(start, self.pseudo_cursor, self.line),
 			}),
 			_ => Some(Token {
-				kind: TokType::Undefined(s.clone()),
+				kind: TokType::Undefined(s),
 				span: Span::new(start, self.cursor, self.line),
 			}),
 		}
@@ -153,6 +158,41 @@ impl<'a> Lexer<'a> {
 			Span::new(0, self.pseudo_cursor, self.line),
 		))
 	}
+
+	pub fn equate(&mut self) -> Option<Token> {
+		let start = self.pseudo_cursor;
+		self.translate(2);
+
+		Some(Token::new(
+			TokType::Equate,
+			Span::new(start, self.pseudo_cursor, self.line),
+		))
+	}
+
+	pub fn assign(&mut self) -> Option<Token> {
+		let start = self.pseudo_cursor;
+		self.translate(1);
+
+		Some(Token::new(
+			TokType::Assign,
+			Span::new(start, self.pseudo_cursor, self.line),
+		))
+	}
+
+	pub fn whitespace(&mut self) -> Option<Token> {
+		self.translate(1);
+		self.next()
+	}
+
+	pub fn undefined(&mut self) -> Option<Token> {
+		let start = self.pseudo_cursor;
+		self.translate(1);
+
+		Some(Token::new(
+			TokType::Undefined(self.current_char().unwrap().into()),
+			Span::new(start, self.pseudo_cursor, self.line),
+		))
+	}
 }
 
 impl<'a> Iterator for Lexer<'a> {
@@ -160,43 +200,18 @@ impl<'a> Iterator for Lexer<'a> {
 
 	fn next(&mut self) -> Option<Token> {
 		if let Some(c) = self.current_char() {
-			let start = self.pseudo_cursor;
 			let next_char = self.peek_char();
 
 			match c {
 				'\n' => self.newline(),
 				'-' if next_char == Some('-') => self.single_line_comment(),
 				'"' => self.single_line_string(),
-				'=' if next_char == Some('=') => {
-					self.translate(2);
-
-					Some(Token::new(
-						TokType::Equate,
-						Span::new(start, self.pseudo_cursor, self.line),
-					))
-				}
-				'=' => {
-					self.translate(1);
-
-					Some(Token::new(
-						TokType::Assign,
-						Span::new(start, self.pseudo_cursor, self.line),
-					))
-				}
-				' ' => {
-					self.translate(1);
-					self.next()
-				}
+				'=' if next_char == Some('=') => self.equate(),
+				'=' => self.assign(),
+				' ' => self.whitespace(),
 				'A'..='Z' | 'a'..='z' | '_' => self.identifier(),
 				'0'..='9' => self.get_number(),
-				_ => {
-					self.translate(1);
-
-					Some(Token::new(
-						TokType::Undefined(c.into()),
-						Span::new(start, self.pseudo_cursor, self.line),
-					))
-				}
+				_ => self.undefined(),
 			}
 		} else {
 			None
