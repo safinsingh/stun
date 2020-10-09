@@ -1,4 +1,4 @@
-name: CI
+name: test
 
 on:
    push:
@@ -21,5 +21,6 @@ jobs:
               override: true
               components: rustfmt
 
+         - uses: actions/checkout@v2
          - name: Test
            run: cargo test --verbose
