@@ -20,13 +20,8 @@ impl<'a> Iterator for Lexer<'a> {
 				'}' => self.single_char_match(TokType::RBrace),
 				':' => self.single_char_match(TokType::Colon),
 				'.' => self.single_char_match(TokType::Period),
-				'>' if next_char == Some('=') => {
-					self.multi_char_match(2, TokType::GreaterEq)
-				}
-
-				'<' if next_char == Some('=') => {
-					self.multi_char_match(2, TokType::LessEq)
-				}
+				'>' if next_char == Some('=') => self.multi_char_match(2, TokType::GreaterEq),
+				'<' if next_char == Some('=') => self.multi_char_match(2, TokType::LessEq),
 				'>' => self.single_char_match(TokType::Greater),
 				'<' => self.single_char_match(TokType::Less),
 				'+' => self.single_char_match(TokType::Plus),
@@ -34,9 +29,7 @@ impl<'a> Iterator for Lexer<'a> {
 				'*' => self.single_char_match(TokType::Multiply),
 				'/' => self.single_char_match(TokType::Divide),
 				'%' => self.single_char_match(TokType::Mod),
-				'~' if next_char == Some('=') => {
-					self.multi_char_match(2, TokType::NoEq)
-				}
+				'~' if next_char == Some('=') => self.multi_char_match(2, TokType::NoEq),
 				'A'..='Z' | 'a'..='z' | '_' => self.identifier(),
 				'0'..='9' => self.get_number(),
 				_ => self.undefined(),
@@ -119,11 +112,7 @@ impl<'a> Lexer<'a> {
 		))
 	}
 
-	pub(crate) fn multi_char_match(
-		&mut self,
-		chars: usize,
-		t: TokType,
-	) -> Option<Token> {
+	pub(crate) fn multi_char_match(&mut self, chars: usize, t: TokType) -> Option<Token> {
 		self.translate(chars);
 		Some(Token::new(
 			t,
