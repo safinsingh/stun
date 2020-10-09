@@ -11,9 +11,32 @@ impl<'a> Iterator for Lexer<'a> {
 				'\n' => self.newline(),
 				'-' if next_char == Some('-') => self.single_line_comment(),
 				'"' => self.single_line_string(),
+				' ' | '\t' => self.whitespace(),
 				'=' if next_char == Some('=') => self.equate(),
 				'=' => self.assign(),
-				' ' => self.whitespace(),
+				'(' => self.single_char_match(TokType::LParen),
+				')' => self.single_char_match(TokType::RParen),
+				'{' => self.single_char_match(TokType::LBrace),
+				'}' => self.single_char_match(TokType::RBrace),
+				':' => self.single_char_match(TokType::Colon),
+				'.' => self.single_char_match(TokType::Period),
+				'>' if next_char == Some('=') => {
+					self.multi_char_match(2, TokType::GreaterEq)
+				}
+
+				'<' if next_char == Some('=') => {
+					self.multi_char_match(2, TokType::LessEq)
+				}
+				'>' => self.single_char_match(TokType::Greater),
+				'<' => self.single_char_match(TokType::Less),
+				'+' => self.single_char_match(TokType::Plus),
+				'-' => self.single_char_match(TokType::Minus),
+				'*' => self.single_char_match(TokType::Multiply),
+				'/' => self.single_char_match(TokType::Divide),
+				'%' => self.single_char_match(TokType::Mod),
+				'~' if next_char == Some('=') => {
+					self.multi_char_match(2, TokType::NoEq)
+				}
 				'A'..='Z' | 'a'..='z' | '_' => self.identifier(),
 				'0'..='9' => self.get_number(),
 				_ => self.undefined(),
@@ -26,16 +49,57 @@ impl<'a> Iterator for Lexer<'a> {
 
 #[derive(Debug, PartialEq)]
 pub enum TokType {
+	// Operators
 	Assign,
 	Equate,
+	Plus,
+	Minus,
+	Multiply,
+	Divide,
+	Mod,
+	NoEq,
+
+	// Keywords
 	True,
 	False,
+	If,
+	Function,
+	End,
+	Local,
+	Nil,
+	While,
+	Then,
+	And,
+	Or,
+	Not,
+	For,
+	Do,
+
+	// Symbols
+	LParen,
+	RParen,
+	LBrace,
+	RBrace,
+	Colon,
+	Period,
+	LessEq,
+	GreaterEq,
+	Greater,
+	Less,
+
+	// Internals
 	Newline,
-	SingleLineString(String),
 	Undefined(String),
-	Ident(String),
-	SingleLineComment(String),
+
+	// Primitives
 	Number(f64),
+	SingleLineString(String),
+
+	// Comments
+	SingleLineComment(String),
+
+	// Misc
+	Ident(String),
 }
 
 pub struct Lexer<'a> {
@@ -47,6 +111,26 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
 	// parsing methods
+	pub(crate) fn single_char_match(&mut self, t: TokType) -> Option<Token> {
+		self.translate(1);
+		Some(Token::new(
+			t,
+			Span::new(self.pseudo_cursor - 1, self.pseudo_cursor, self.line),
+		))
+	}
+
+	pub(crate) fn multi_char_match(
+		&mut self,
+		chars: usize,
+		t: TokType,
+	) -> Option<Token> {
+		self.translate(chars);
+		Some(Token::new(
+			t,
+			Span::new(self.pseudo_cursor - 1, self.pseudo_cursor, self.line),
+		))
+	}
+
 	pub(crate) fn get_number(&mut self) -> Option<Token> {
 		let mut s = String::new();
 		let start = self.pseudo_cursor;
@@ -122,6 +206,18 @@ impl<'a> Lexer<'a> {
 		let kind = match s.as_str() {
 			"true" => TokType::True,
 			"false" => TokType::False,
+			"if" => TokType::If,
+			"function" => TokType::Function,
+			"end" => TokType::End,
+			"local" => TokType::Local,
+			"nil" => TokType::Nil,
+			"while" => TokType::While,
+			"then" => TokType::Then,
+			"and" => TokType::And,
+			"or" => TokType::Or,
+			"not" => TokType::Not,
+			"for" => TokType::For,
+			"do" => TokType::Do,
 			_ => TokType::Ident(s),
 		};
 
