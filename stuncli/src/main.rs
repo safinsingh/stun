@@ -1,6 +1,6 @@
 use std::{env, error::Error, fs};
 
-use stunlex::Lexer;
+use stunlib::lex::Lexer;
 mod repl;
 
 fn main() -> Result<(), Box<dyn Error>> {

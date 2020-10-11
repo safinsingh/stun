@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-	use crate::*;
+	use crate::lex::*;
 
 	#[test]
 	fn whitespace() {

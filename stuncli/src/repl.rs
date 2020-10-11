@@ -1,6 +1,6 @@
 use std::{io, io::Write};
 
-use stunlex::Lexer;
+use stunlib::lex::Lexer;
 
 pub(crate) fn new() {
 	println!("Stun v0.1.0 REPL");

@@ -4,9 +4,9 @@
 name = "stuncli"
 version = "0.1.0"
 dependencies = [
- "stunlex",
+ "stunlib",
 ]
 
 [[package]]
-name = "stunlex"
+name = "stunlib"
 version = "0.1.0"

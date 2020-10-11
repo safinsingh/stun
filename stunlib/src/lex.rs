@@ -1,5 +1,4 @@
 use std::iter::Iterator;
-mod tests;
 
 impl<'a> Iterator for Lexer<'a> {
 	type Item = Token;

@@ -5,4 +5,9 @@ authors = ["Safin Singh <safin.singh@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-stunlex = { path = '../stunlex' }
+stunlib = { path = '../stunlib' }
+
+[[bin]]
+bench = false
+path = "src/main.rs"
+name = "stun"

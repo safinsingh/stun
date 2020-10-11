@@ -1,5 +1,5 @@
 [package]
-name = "stunlex"
+name = "stunlib"
 version = "0.1.0"
 authors = ["Safin Singh <safin.singh@gmail.com>"]
 edition = "2018"
