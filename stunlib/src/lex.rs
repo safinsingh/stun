@@ -9,7 +9,7 @@ impl<'a> Iterator for Lexer<'a> {
 			match c {
 				'\n' => self.newline(),
 				'-' if next_char == Some('-') => self.single_line_comment(),
-				'"' => self.single_line_string(),
+				'"' | '\'' => self.single_line_string(),
 				' ' | '\t' => self.whitespace(),
 				'=' if next_char == Some('=') => self.equate(),
 				'=' => self.assign(),
@@ -151,17 +151,20 @@ impl<'a> Lexer<'a> {
 
 	pub(crate) fn single_line_string(&mut self) -> Option<Token> {
 		let mut s = String::new();
+		let str_type = self.current_char().unwrap();
 		let start = self.pseudo_cursor;
+		let mut finished = false;
 
 		self.translate(1);
 		while let Some(ch) = self.current_char() {
 			match ch {
-				'\\' if self.peek_char() == Some('"') => {
-					s.push('"');
+				'\\' if self.peek_char() == Some(str_type) => {
+					s.push(str_type);
 					self.translate(2);
 				}
-				'"' => {
+				_ if str_type == ch => {
 					self.translate(2);
+					finished = true;
 					break;
 				}
 				_ => {
@@ -171,10 +174,17 @@ impl<'a> Lexer<'a> {
 			}
 		}
 
-		Some(Token::new(
-			TokType::SingleLineString(s),
-			Span::new(start, self.pseudo_cursor, self.line),
-		))
+		if finished {
+			Some(Token::new(
+				TokType::SingleLineString(s),
+				Span::new(start, self.pseudo_cursor, self.line),
+			))
+		} else {
+			Some(Token::new(
+				TokType::Undefined(s),
+				Span::new(start, self.pseudo_cursor, self.line),
+			))
+		}
 	}
 
 	pub(crate) fn identifier(&mut self) -> Option<Token> {
